@@ -1,0 +1,14 @@
+# Eclipse specific
+/.classpath
+/.project
+/.settings
+/build
+
+# Destination directory for ant builds
+/dist
+
+# Java libraries
+/lib/*.jar
+
+# This class should be compiled from protocol buffer definitions (src/job.proto)
+/src/nfdist/JobProto.java

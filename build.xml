@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="default" name="nfdist">
+    <property name="debuglevel" value="source,lines,vars"/>
+	
+	<!--Path definitions-->
+	<property name="dir.bin" value="bin" />
+	<property name="dir.build" value="build"/>
+	<property name="dir.dist" value="dist/${ant.project.name}" />
+	<property name="dir.etc" value="etc" />
+	<property name="dir.lib" value="lib" />
+	<property name="dir.src" value="src" />
+	<property name="proto.def" value ="${dir.src}/job.proto" />
+	<property name="proto.code" value="${dir.src}/${ant.project.name}/JobProto.java" />
+	
+	<!--Library dependency search paths-->
+	<path id="classpath">
+		<fileset dir="${dir.lib}" includes="**/*.jar" />
+		<fileset dir="/usr/share/java" includes="**/*.jar" erroronmissingdir="false" />
+		<fileset dir="/usr/lib/hadoop" includes="**/*.jar" erroronmissingdir="false" />
+		<fileset dir="/usr/lib/hadoop-hdfs" includes="**/*.jar" erroronmissingdir="false" />
+		<fileset dir="/usr/lib/zookeeper" includes="**/*.jar" erroronmissingdir="false" />
+	</path>
+	
+	<!--Entry point-->
+	<target name="default" depends="dist" />
+	
+	<!--Cleanup-->
+    <target name="clean">
+    	<description>Clean created files</description>
+        <delete dir="${dir.build}"/>
+    	<delete dir="${dir.dist}"/>
+    	<delete file="${proto.code}" />
+    </target>
+	
+	<!--Compile protocol buffer definitions-->
+	<target name="check-protobuf">
+		<condition property="proto-exists">
+			<available file="${proto.code}" type="file" />
+		</condition>
+	</target>
+	
+	<target name="protobuf" depends="check-protobuf" unless="proto-exists" >
+		<echo>Compiling protocol buffer definitions ${proto.def} into ${proto.code}</echo>
+		<exec executable="protoc" failonerror="true" >
+			<arg value="--java_out=${dir.src}" />
+			<arg value="${proto.def}" />
+		</exec>
+	</target>
+	
+	<!--Compile the code-->
+    <target name="build" depends="protobuf">
+    	<mkdir dir="${dir.build}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="${dir.build}" includeantruntime="false">
+            <src path="${dir.src}"/>
+        	<classpath refid="classpath"/>
+        </javac>
+    </target>
+
+	<!--Prepare for distribution-->
+	<target name="dist" depends="build">
+		<mkdir dir="${dir.dist}"/>
+		<mkdir dir="${dir.dist}/etc" />
+		<copy todir="${dir.dist}/etc">
+    		<fileset dir="${dir.etc}"/>
+  		</copy>
+		
+		<mkdir dir="${dir.dist}/bin" />
+		<copy todir="${dir.dist}/bin">
+			<fileset dir="${dir.bin}" />
+		</copy>
+		<chmod perm="755">
+			<fileset dir="${dir.dist}/bin" />
+		</chmod>
+		
+		<mkdir dir="${dir.dist}/lib" />
+		<copy todir="${dir.dist}/lib" file="${dir.lib}/README" />
+		<jar destfile="${dir.dist}/lib/${ant.project.name}.jar">
+			<fileset dir="${dir.build}">
+				<include name="**/*.class"/>
+			</fileset>
+		</jar>
+	</target>
+</project>

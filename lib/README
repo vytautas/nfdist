@@ -1,0 +1,1 @@
+Place required libraries in this folder or append a path to the $LIBDIRS variable in etc/classpath.sh

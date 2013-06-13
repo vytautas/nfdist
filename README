@@ -1,0 +1,52 @@
+Nfdist is a tool for running Nfdump in a distributed manner on HDFS.
+
+=== INSTALL ===
+
+--- Requirements ---
+* Java (development kit)
+* Java libraries (hadoop, zookeeper, etc), full list is in etc/libdefs.sh
+* Protocol buffers compiler for java
+* Ant
+* Working HDFS cluster
+* Working ZooKeeper cluster
+* Screen (the window manager) on datanodes
+* Nfdump with patches from https://github.com/vytautas/nfdump
+* (optional) Nfsen with patches from https://github.com/vytautas/nfsen
+
+--- Installing from source ---
+Execute the following commands in shell:
+ git clone https://github.com/vytautas/nfdist
+ cd nfdist
+ ant
+ cp -a dist/nfdist /opt
+
+Edit the configuration /opt/nfdist/etc/nfdist.properties
+
+
+=== RUNNING ===
+
+First start the Workers (see bellow) on datanodes. They will do the
+processing.
+
+Then run Manager.sh (see bellow) with the same arguments as nfdump.
+It will submit job requests to Workers, combine and output the results.
+
+--- Worker ---
+Worker should be executed on HDFS datanodes as follows:
+ screen -dmS nfdist /opt/nfdist/bin/worker.sh <hostname/ip>
+
+<hostname/ip> must match local HDFS datanode address. Worker will only
+process locally available files.
+
+Run "screen -r nfdist" to attach to the running session. Press "Ctrl+a d" to deattach. 
+
+--- Manager ---
+Manager accepts the same arguments as nfdump:   
+ /opt/nfdist/bin/manager.sh <options> <filter>
+
+Path for -m/-M options should be relative to HDFS root folder specified
+in nfdist.properties configuration file.
+
+Try to specify filters when possible, it is essential to achieve good
+distributed processing performance.
+
